@@ -1,0 +1,44 @@
+# Chronoscope  
+
+Chronoscope connects to cloud photo archive and builds a powerful index from it. It it by **time, location, and people** — creating a searchable timeline that understands who was where and when, across years.
+
+Everything stays under your control: photos are processed locally, and the index is stored on your machine.
+
+### Core Goals
+- Connects to OneDrive
+- Multi-dimensional indexing: Time + GPS + People (face recognition)
+- Learnable .NET implementation using modern libraries
+- Incremental updates when new photos appear in OneDrive
+
+### Key Features
+- **OneDrive Sync** — Automatically discover and fetch new or changed photos
+- **Time Indexing** — Chronological timeline
+- **Location Indexing** — GPS-based map view
+- **People Indexing** — Face detection + recognition (handles aging)
+- **Unified Search** — Query by date range, location, person, or any combination
+- **Local Database** — Fast querying even with large archives
+
+### How It Works (High-Level Pipeline)
+
+1. **OneDrive Connector** — Authenticates and lists/downloads photos from your chosen folders.
+2. **EXIF Processor** — Extracts timestamps and GPS coordinates.
+3. **Face Pipeline** (using FaceONNX + ONNX Runtime):
+    - Detect faces → align → generate embedding vectors
+    - Cluster similar faces across years and support manual labeling
+4. **Unified Index** — Stores everything in PostgreSQL
+5. **Explorer** — Interactive map + timeline + people browser
+
+### Technology Stack
+- **Language**: C# / .NET
+- **Cloud Access**: Microsoft Graph API (OneDrive)
+- **Face Recognition**: FaceONNX + ONNX Runtime
+- **Database**: PsotgreSQL
+- **Frtontend**: ASP.NET MVC + Razor (Server-Side Rendering)
+  * `Styling`: Pico CSS v2
+  * `Interactivity`: HTMX
+  * `Mapping`: Leaflet
+
+### Project Status
+Early development.  
+Focus is on reliable OneDrive integration + multi-dimensional indexing (time + location + people).
+
