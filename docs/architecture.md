@@ -62,7 +62,7 @@
 - User configures one folder at setup time
 
 ### Indexing Pipeline (Background Worker)
-Runs as `IHostedService`. Processing steps per photo:
+Runs as `IHostedService` using an in-process **TPL Dataflow ETL workflow** (bounded stages with controlled parallelism). Processing steps per photo:
 
 1. Fetch metadata from Graph API (filename, modified date, size)
 2. Download photo temporarily to local disk
