@@ -95,6 +95,12 @@ Runs as `IHostedService` using an in-process **TPL Dataflow ETL workflow** (boun
 - **Leaflet** — interactive map with GPS pins
 - No app-level auth — relies on reverse proxy (Nginx, Traefik, Authentik, etc.)
 
+### Logging
+- **Serilog** is the logging pipeline in all environments.
+- Logging configuration is sourced from environment-specific app configuration files.
+- **Development** uses Serilog Console sink with standard readable console output.
+- **Non-development environments** use Serilog JSON console output (not compact JSON) for structured log ingestion.
+
 ### Explorer (Unified View)
 - Timeline and map are **linked**: selecting a date range updates map pins via HTMX
 - Photos without GPS are shown only in the timeline
@@ -226,3 +232,4 @@ builder.Services.AddWeb();
 | Mapping | Leaflet | Open source, well supported |
 | Styling | Pico CSS v2 | Minimal, semantic |
 | App auth | None (reverse proxy) | Keeps app simple; proxy handles access |
+| Logging | Serilog in all environments (config-driven) | Single logging pipeline with environment-specific formatting: readable console in Development, JSON console in non-development |
