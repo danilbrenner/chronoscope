@@ -13,10 +13,10 @@ Deliver a minimal, working web shell with shared layout and navigation, ready fo
 
 ## Tasks
 
-- [ ] Task 2.1 — Bootstrap MVC host and routing
-- [ ] Task 2.2 — Add shared layout with top navigation skeleton
-- [ ] Task 2.3 — Integrate Pico CSS v2
-- [ ] Task 2.4 — Add placeholder home/index page
+- [x] Task 2.1 — Bootstrap MVC host and routing
+- [x] Task 2.2 — Add shared layout with top navigation skeleton
+- [x] Task 2.3 — Integrate Pico CSS v2
+- [x] Task 2.4 — Add placeholder home/index page
 
 ### Task 2.1 — Bootstrap MVC host and routing
 **Depends on:** Phase 1 complete  

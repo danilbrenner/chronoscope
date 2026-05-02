@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Chronoscope</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="~/_content/Chronoscope.Web/css/site.css" asp-append-version="true"/>
+</head>
+<body>
+<partial name="_Topbar" />
+
+<main class="layout">
+    <partial name="_Sidebar" />
+    
+    <section class="content">
+        @RenderBody()
+    </section>
+</main>
+
+<script src="~/_content/Chronoscope.Web/js/site.js" asp-append-version="true" defer></script>
+</body>
+</html>
