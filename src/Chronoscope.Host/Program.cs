@@ -3,8 +3,17 @@ using Chronoscope.Data;
 using Chronoscope.Infrastructure;
 using Chronoscope.Web;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, loggerConfiguration) =>
+{
+    loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+});
 
 builder.Services.AddApplication();
 builder.Services.AddData(builder.Configuration);
