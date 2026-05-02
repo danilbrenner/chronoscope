@@ -62,7 +62,7 @@
 - User configures one folder at setup time
 
 ### Indexing Pipeline (Background Worker)
-Runs as `IHostedService`. Processing steps per photo:
+Runs as `IHostedService` using an in-process **TPL Dataflow ETL workflow** (bounded stages with controlled parallelism). Processing steps per photo:
 
 1. Fetch metadata from Graph API (filename, modified date, size)
 2. Download photo temporarily to local disk
@@ -75,10 +75,18 @@ Runs as `IHostedService`. Processing steps per photo:
 ### Data Layer
 - **EF Core** for all DB access (repositories + migrations)
 - **PostgreSQL + PostGIS** for geospatial queries (proximity, bounding box)
+- EF uses `UseSnakeCaseNamingConvention()` for PostgreSQL naming consistency
 - Schema tracks: photos, EXIF metadata, GPS points, thumbnails, face embeddings, person labels
 - Domain entities are used directly as EF entities — no separate persistence model
 - EF configured exclusively via **Fluent API** (`IEntityTypeConfiguration<T>`) — no EF attributes on domain classes
+- Consumers use `IDbContextFactory<ChronoscopeDbContext>` instead of injecting `ChronoscopeDbContext` directly
 - Source-specific metadata (e.g., OneDrive item ID, delta token) stored as a **JSON column** on the photo entity, allowing future sources without schema changes
+
+### Migration Strategy
+- **Production/staging**: migrations run as a dedicated one-shot container (`--migrate-and-exit`) before the app starts.
+- **Development**: migrations are manual (`dotnet ef database update`).
+- **Normal app startup never auto-migrates**; it fails fast if there are pending migrations.
+- Deploys are orchestrated with Docker Compose using `depends_on: condition: service_completed_successfully` so app startup is blocked until migration succeeds.
 
 ### Web UI
 - **ASP.NET MVC + Razor** — server-side rendering
@@ -205,6 +213,9 @@ builder.Services.AddWeb();
 | Auth | MSAL Device Code Flow | Simple, familiar, token persisted |
 | Database | PostgreSQL + PostGIS | Relational + native geospatial support |
 | ORM | EF Core | Migrations + data access in one |
+| PostgreSQL naming | `UseSnakeCaseNamingConvention()` | Consistent DB naming and smoother SQL interoperability |
+| DbContext access | `IDbContextFactory<ChronoscopeDbContext>` | Safe context lifetime handling outside request-scoped flows |
+| Migration execution | One-shot `--migrate-and-exit` mode | Keeps schema changes explicit and deterministic in deploy flow |
 | Domain model | Anemic (entities = EF entities) | No BL to protect; avoids mapping overhead |
 | EF configuration | Fluent API only | Keeps Domain free of EF attributes |
 | Object mapping | Manual (`Property = Property`) | Explicit, greppable, no framework magic |

@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgis/postgis:17-3.5
+    container_name: chronoscope-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chronoscope
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - chronoscope-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d chronoscope"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrator:
+    image: ${CHRONOSCOPE_IMAGE:-chronoscope:latest}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["--migrate-and-exit"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Chronoscope: Host=postgres;Port=5432;Database=chronoscope;Username=postgres;Password=${POSTGRES_PASSWORD}
+    restart: "no"
+
+  app:
+    image: ${CHRONOSCOPE_IMAGE:-chronoscope:latest}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Chronoscope: Host=postgres;Port=5432;Database=chronoscope;Username=postgres;Password=${POSTGRES_PASSWORD}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  chronoscope-postgres-data:

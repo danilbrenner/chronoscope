@@ -85,6 +85,12 @@ HTMX interactions return Razor partial views — not JSON. Use `Request.IsHtmx()
 ### Minimize JavaScript
 Use HTMX attributes and CSS for interactivity wherever possible. JavaScript is only acceptable for Leaflet map integration.
 
+### EF Migrations Workflow
+- Use `dotnet ef` for all migration lifecycle operations (create, apply, rollback, remove).
+- `dotnet-ef` must be installed as a **local tool** in the repository (`dotnet new tool-manifest`, then `dotnet tool install dotnet-ef`).
+- Do not create or roll back migrations by manually editing migration files.
+- Manual migration edits are allowed only for deterministic fixes after `dotnet ef` generation.
+
 ---
 
 ## Domain Language

@@ -42,3 +42,10 @@ Everything stays under your control: photos are processed locally, and the index
 Early development.  
 Focus is on reliable OneDrive integration + multi-dimensional indexing (time + location + people).
 
+### Migrations & Deployment Mode
+- **Production/Staging**: run migrations in dedicated mode before app startup:
+  - `Chronoscope.Host --migrate-and-exit`
+  - Use `compose.prod.yml` where `migrator` must complete successfully before `app` starts.
+- **Development**: run migrations manually:
+  - `dotnet ef database update --project src/Chronoscope.Data --startup-project src/Chronoscope.Host`
+- In normal mode, the app fails fast when pending migrations exist.
