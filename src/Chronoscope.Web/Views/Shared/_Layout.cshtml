@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Chronoscope</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@picocss/pico@2/css/pico.min.css" />
+</head>
+<body>
+    <header class="container">
+        <nav>
+            <ul>
+                <li><strong>Chronoscope</strong></li>
+            </ul>
+            <ul>
+                <li><a href="/">Timeline</a></li>
+                <li><a href="/map">Map</a></li>
+                <li><a href="/sync/status">Sync Status</a></li>
+                <li><a href="/setup">Setup</a></li>
+                <li aria-label="notifications">🔔 0</li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        @RenderBody()
+    </main>
+</body>
+</html>
