@@ -1,0 +1,114 @@
+:root {
+    --pico-font-size: 90%;
+    --pico-spacing: 0.75rem;
+    --sidebar-width: 220px;
+}
+
+body {
+    margin: 0;
+}
+
+.topbar {
+    border-bottom: 1px solid var(--pico-muted-border-color);
+    padding: 0.35rem 1rem;
+}
+
+.topbar nav {
+    margin: 0;
+}
+
+.topbar a,
+.topbar button {
+    font-size: 0.85rem;
+}
+
+.icon-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.4rem;
+    text-decoration: none;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+    min-height: calc(100vh - 58px);
+}
+
+.sidebar {
+    border-right: 1px solid var(--pico-muted-border-color);
+    padding: 0.9rem 0.7rem;
+}
+
+.sidebar nav ul {
+    margin: 0;
+}
+
+.sidebar nav a {
+    display: block;
+    padding: 0.45rem 0.55rem;
+    border-radius: 0.4rem;
+    text-decoration: none;
+}
+
+.sidebar nav a:hover {
+    background: var(--pico-muted-color);
+    color: var(--pico-contrast);
+}
+
+.content {
+    padding: 1rem;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+    margin-bottom: 0.9rem;
+}
+
+.card {
+    border: 1px solid var(--pico-muted-border-color);
+    border-radius: 0.45rem;
+    padding: 0.8rem;
+    background: var(--pico-card-background-color);
+}
+
+.card h6 {
+    margin-bottom: 0.3rem;
+}
+
+.card h4 {
+    margin: 0.2rem 0;
+}
+
+.table-card {
+    padding: 0.4rem 0.8rem 0.8rem;
+}
+
+table th,
+table td {
+    padding: 0.55rem 0.45rem;
+}
+
+.muted {
+    color: var(--pico-muted-color);
+}
+
+@media (max-width: 900px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--pico-muted-border-color);
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+}

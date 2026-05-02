@@ -44,6 +44,7 @@ await VerifyDatabaseConnectivityAsync(app.Services);
 await VerifyNoPendingMigrationsAsync(app.Services);
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 app.MapDefaultControllerRoute();
 app.Run();
