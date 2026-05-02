@@ -14,10 +14,10 @@ Establish the layered solution skeleton, database connectivity, and baseline per
 
 ## Tasks
 
-- [ ] Task 1.1 — Create solution and projects by layer
-- [ ] Task 1.2 — Configure EF Core + PostgreSQL + PostGIS
-- [ ] Task 1.3 — Add first migration and initialize schema baseline
-- [ ] Task 1.4 — Wire DI setup extensions in Host startup
+- [x] Task 1.1 — Create solution and projects by layer
+- [x] Task 1.2 — Configure EF Core + PostgreSQL + PostGIS
+- [x] Task 1.3 — Add first migration and initialize schema baseline
+- [x] Task 1.4 — Wire DI setup extensions in Host startup
 
 ### Task 1.1 — Create solution and projects by layer
 **Depends on:** None  
