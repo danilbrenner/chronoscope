@@ -233,3 +233,5 @@ builder.Services.AddWeb();
 | Styling | Pico CSS v2 | Minimal, semantic |
 | App auth | None (reverse proxy) | Keeps app simple; proxy handles access |
 | Logging | Serilog in all environments (config-driven) | Single logging pipeline with environment-specific formatting: readable console in Development, JSON console in non-development |
+| MSBuild defaults | `Directory.Build.props` at repo root | Centralizes shared project properties and build settings across all projects |
+| NuGet versioning | `Directory.Packages.props` at repo root | Central package management with consistent package versions across the solution |
