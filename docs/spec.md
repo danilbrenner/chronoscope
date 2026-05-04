@@ -19,12 +19,20 @@ Chronoscope MVP delivers a single deployable that:
 
 A new user opens the browser and is presented with a **Setup page**. The setup flow is sequential:
 
-1. **Authenticate** — Display a Device Code + verification URL (MSAL Device Code Flow). User completes auth in browser. Token is persisted for silent re-auth on restart.
+1. **Authenticate** — Redirect user through Microsoft login (Authorization Code Flow via `Microsoft.Identity.Web`). Tokens are acquired and refreshed silently after initial sign-in.
 2. **Select folder** — User types an OneDrive folder path (e.g. `/Photos/Vacations`). A "Verify" button confirms the folder exists via Graph API before saving.
 3. **Sync starts** — Background worker begins immediately. User is redirected to the **Sync Status page**.
 4. **Explore** — Once photos are indexed, user navigates to Timeline or Map.
 
 After initial setup, the Setup page remains accessible from the nav for re-authentication or folder path changes.
+
+### Auth and Token Persistence Requirements
+
+- Azure app registration is a **Web** app scoped to **Personal Microsoft accounts only**
+- Delegated permissions: `Files.Read`, `offline_access`, `User.Read`
+- Token cache is persisted in PostgreSQL using a distributed cache (survives app/container restarts)
+- Token cache encryption is enabled
+- ASP.NET Core Data Protection keys are persisted to a Docker-mounted filesystem volume
 
 ---
 
@@ -147,7 +155,7 @@ Appears on photo selection (row click or pin click). Contains:
 
 ### Setup Page (`/setup`)
 
-- Step 1: Device Code auth (displays code + verification URL)
+- Step 1: Microsoft sign-in via browser redirect (Authorization Code Flow)
 - Step 2: Folder path input + "Verify" button
 - Accessible post-setup for re-authentication or folder reconfiguration
 
