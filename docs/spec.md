@@ -19,7 +19,9 @@ Chronoscope MVP delivers a single deployable that:
 
 A new user opens the browser and is presented with a **Setup page**. The setup flow is sequential:
 
-1. **Authenticate** — Redirect user through Microsoft login (Authorization Code Flow via `Microsoft.Identity.Web`). Tokens are acquired and refreshed silently after initial sign-in.
+Access to the app itself is assumed to be protected by a reverse proxy. Inside the app, setup handles delegated OneDrive authorization separately.
+
+1. **Authenticate OneDrive** — Redirect user through Microsoft login (Authorization Code Flow via `Microsoft.Identity.Web`) for an Azure AD or personal Microsoft account. Tokens are acquired and refreshed silently after initial sign-in.
 2. **Select folder** — User types an OneDrive folder path (e.g. `/Photos/Vacations`). A "Verify" button confirms the folder exists via Graph API before saving.
 3. **Sync starts** — Background worker begins immediately. User is redirected to the **Sync Status page**.
 4. **Explore** — Once photos are indexed, user navigates to Timeline or Map.
@@ -28,7 +30,8 @@ After initial setup, the Setup page remains accessible from the nav for re-authe
 
 ### Auth and Token Persistence Requirements
 
-- Azure app registration is a **Web** app scoped to **Personal Microsoft accounts only**
+- App access control is handled outside Chronoscope by a reverse proxy or equivalent edge auth layer
+- Azure app registration is a **Web** app scoped to **Azure AD and personal Microsoft accounts**
 - Delegated permissions: `Files.Read`, `offline_access`, `User.Read`
 - Token cache is persisted in PostgreSQL using a distributed cache (survives app/container restarts)
 - Token cache encryption is enabled

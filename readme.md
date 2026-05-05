@@ -31,6 +31,8 @@ Everything stays under your control: photos are processed locally, and the index
 ### Technology Stack
 - **Language**: C# / .NET
 - **Cloud Access**: Microsoft Graph API (OneDrive)
+- **App Access Auth**: Reverse proxy authentication
+- **OneDrive Auth**: Microsoft sign-in via `Microsoft.Identity.Web` for Azure AD and personal Microsoft accounts
 - **Face Recognition**: FaceONNX + ONNX Runtime
 - **Database**: PsotgreSQL
 - **Frtontend**: ASP.NET MVC + Razor (Server-Side Rendering)

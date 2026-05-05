@@ -46,6 +46,9 @@ await VerifyNoPendingMigrationsAsync(app.Services);
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 app.MapDefaultControllerRoute();
 app.Run();
 

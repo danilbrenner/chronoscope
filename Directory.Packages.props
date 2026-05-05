@@ -18,6 +18,7 @@
     <!-- Infrastructure layer -->
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Identity.Web" Version="4.0.0" />
     <PackageVersion Include="Microsoft.Identity.Client" Version="4.77.1" />
 
     <!-- Host layer -->

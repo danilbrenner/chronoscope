@@ -4,7 +4,8 @@
 
 - **Local-first metadata**: Photos live on OneDrive. Only metadata, embeddings, and thumbnails are stored locally.
 - **Ephemeral downloads**: Photos are downloaded temporarily for processing (EXIF, thumbnails, face detection) and deleted immediately after.
-- **No app-level authentication**: The app assumes deployment behind a reverse proxy (e.g., Nginx, Traefik, Authentik) that enforces access control.
+- **Proxy-enforced app access**: Chronoscope assumes deployment behind a reverse proxy (e.g., Nginx, Traefik, Authentik) that authenticates the human user before they can access the app.
+- **Separate OneDrive source auth**: OneDrive access uses delegated Microsoft Graph auth inside the app and is independent from the reverse-proxy session.
 - **Single deployable**: One executable hosts both the background worker (sync/indexing) and the web UI (ASP.NET MVC).
 - **No rich domain model**: The app is data-centric with no business logic or state machines. Domain entities are used directly as EF entities — no separate persistence model, no mapping layer between them.
 - **EF configured via Fluent API only**: No EF attributes on domain classes. All EF configuration lives in the Data layer (`IEntityTypeConfiguration<T>`), keeping `Domain` free of any EF dependency.
@@ -57,11 +58,13 @@
 
 ### OneDrive Connector
 - Uses **Microsoft Graph API** with **Authorization Code Flow** via `Microsoft.Identity.Web`
+- Azure app registration is a **Web** app scoped to **Azure AD and personal Microsoft accounts**
 - Delegated scopes: `Files.Read`, `offline_access`, `User.Read`
 - Token cache is persisted in PostgreSQL via a distributed cache and silently refreshes access tokens on restart
 - Token cache encryption uses ASP.NET Core Data Protection with keys persisted to a filesystem volume
 - **Delta queries** track new/changed/deleted photos efficiently without full re-scans
 - User configures one folder at setup time
+- This flow authorizes OneDrive access for sync; it is not the app's primary access-control boundary
 
 ### Indexing Pipeline (Background Worker)
 Runs as `IHostedService` using an in-process **TPL Dataflow ETL workflow** (bounded stages with controlled parallelism). Processing steps per photo:
@@ -95,7 +98,7 @@ Runs as `IHostedService` using an in-process **TPL Dataflow ETL workflow** (boun
 - **Pico CSS v2** — styling
 - **HTMX** — partial page updates (filtering, pagination) without a JS framework
 - **Leaflet** — interactive map with GPS pins
-- No app-level auth — relies on reverse proxy (Nginx, Traefik, Authentik, etc.)
+- App access is enforced by a reverse proxy; the app only runs Microsoft sign-in when the user needs to connect or reconnect OneDrive.
 
 ### Logging
 - **Serilog** is the logging pipeline in all environments.
@@ -242,7 +245,7 @@ builder.Services.AddWeb();
 |---|---|---|
 | Language | C# / .NET | Learnable, strongly typed, good ecosystem |
 | Cloud access | Microsoft Graph API | Official OneDrive API |
-| Auth | Authorization Code Flow via `Microsoft.Identity.Web` | Correct fit for a web app, supports silent refresh, and works cleanly with persistent encrypted token caching |
+| OneDrive auth | Authorization Code Flow via `Microsoft.Identity.Web` | Correct fit for a browser-hosted setup flow, supports silent refresh, and works cleanly with persistent encrypted token caching for Azure AD and personal accounts |
 | Database | PostgreSQL + PostGIS | Relational + native geospatial support |
 | ORM | EF Core | Migrations + data access in one |
 | PostgreSQL naming | `UseSnakeCaseNamingConvention()` | Consistent DB naming and smoother SQL interoperability |
@@ -259,7 +262,7 @@ builder.Services.AddWeb();
 | Styling | Pico CSS v2 | Minimal, semantic |
 | Unit test stack | xUnit + Moq + AutoFixture | Readable tests with explicit mocking and fixture generation |
 | Integration test DB | PostgreSQL + PostGIS via TestContainers | Matches production provider features (geo/vector) |
-| App auth | None (reverse proxy) | Keeps app simple; proxy handles access |
+| App auth | Reverse proxy authentication | Keeps Chronoscope focused on photo indexing while the deployment edge controls who can open the app |
 | Logging | Serilog in all environments (config-driven) | Single logging pipeline with environment-specific formatting: readable console in Development, JSON console in non-development |
 | MSBuild defaults | `Directory.Build.props` at repo root | Centralizes shared project properties and build settings across all projects |
 | NuGet versioning | `Directory.Packages.props` at repo root | Central package management with consistent package versions across the solution |
