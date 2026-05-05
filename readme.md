@@ -31,6 +31,8 @@ Everything stays under your control: photos are processed locally, and the index
 ### Technology Stack
 - **Language**: C# / .NET
 - **Cloud Access**: Microsoft Graph API (OneDrive)
+- **App Access Auth**: Reverse proxy authentication
+- **OneDrive Auth**: Microsoft sign-in via `Microsoft.Identity.Web` for Azure AD and personal Microsoft accounts
 - **Face Recognition**: FaceONNX + ONNX Runtime
 - **Database**: PsotgreSQL
 - **Frtontend**: ASP.NET MVC + Razor (Server-Side Rendering)
@@ -49,3 +51,8 @@ Focus is on reliable OneDrive integration + multi-dimensional indexing (time + l
 - **Development**: run migrations manually:
   - `dotnet ef database update --project src/Chronoscope.Data --startup-project src/Chronoscope.Host`
 - In normal mode, the app fails fast when pending migrations exist.
+
+### Testing Strategy (Current)
+- **Unit tests**: xUnit + Moq + AutoFixture.
+- **Integration tests**: PostgreSQL + PostGIS via TestContainers, one container per run, per-test reset, real migrations.
+- **E2E tests**: placeholder until dedicated test environment is available.

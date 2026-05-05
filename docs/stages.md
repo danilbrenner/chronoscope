@@ -25,75 +25,79 @@ Minimal working web app with layout and routing.
 
 ---
 
-## Stage 3 — OneDrive Auth
-MSAL Device Code Flow with token persistence and a setup UI.
+## Stage 3 — OneDrive Connection Setup
+Browser-based Microsoft sign-in with persistent token protection and the first-run setup entry point.
 
-- Integrate MSAL .NET for Device Code Flow
-- Settings/setup page: display device code + verification URL to the user
-- Persist token cache so app re-authenticates silently on restart
-- Verify Graph API connectivity (e.g., fetch user profile)
-
----
-
-## Stage 4 — OneDrive Sync
-Folder selection and incremental delta sync loop.
-
-- UI for user to specify the OneDrive folder to sync
-- Background worker polls using Graph API **delta queries**
-- New/changed/deleted items reflected in the DB
-- Photo metadata stored (filename, OneDrive item ID, modified date, size)
-- No image download yet — metadata only
+- Integrate `Microsoft.Identity.Web` using Authorization Code Flow for personal Microsoft accounts
+- Setup page starts Microsoft sign-in via browser redirect instead of showing a device code
+- Persist the token cache in PostgreSQL and enable encryption
+- Persist ASP.NET Core Data Protection keys to a Docker-mounted filesystem volume
+- Verify Graph API connectivity and expose connection state in the UI
 
 ---
 
-## Stage 5 — EXIF Extraction
-Download, extract, persist, delete.
+## Stage 4 — Folder Configuration and Incremental Sync
+Folder verification plus discovery of new, changed, and deleted Photos.
 
-- For each synced photo: download to temp path
+- UI for user to enter a single OneDrive folder path and verify it through Graph API before saving
+- Persist the Source configuration including folder path and delta token
+- Background worker runs Graph API **delta queries**
+- New/changed/deleted Photos are reflected in the Index
+- Photo discovery persists metadata (`filename`, `sourceId`, modified date, size) with processing ready for the next stage
+
+---
+
+## Stage 5 — Photo Processing Pipeline
+Complete per-Photo processing from temporary download through thumbnail generation.
+
+- Download each discovered Photo to a temp path
 - Extract **timestamp** and **GPS coordinates** from EXIF
-- Persist to DB (update photo record with EXIF fields)
-- Delete temp file immediately after extraction
-- Handle photos with missing EXIF gracefully (null GPS, fallback timestamp)
+- Fallback `takenAt` to OneDrive modified date when EXIF timestamp is missing
+- Generate a 400px thumbnail and store it in the DB
+- Delete the temp file immediately after processing
+- Mark Photos as `Processed` or `Failed` with no retry in MVP
 
 ---
 
 ## Stage 6 — Timeline View
 Chronological photo browser.
 
-- List view of photos ordered by timestamp
-- HTMX pagination (load more / page navigation)
-- Display thumbnail (placeholder until Stage 9) or filename
-- Filter by date range
+- Date range filter defaults to the last 30 days
+- Summary bar shows counts with and without GPS coordinates
+- Table view lists Photos ordered by timestamp (newest first)
+- Each row shows thumbnail, filename, date/time, and GPS indicator
+- HTMX "Load more" appends additional rows
+- Selecting a row opens the Side Panel
 
 ---
 
 ## Stage 7 — Map View
 Leaflet map with GPS-located photos.
 
-- Leaflet map rendered server-side (tile layer + markers)
-- Markers placed at GPS coordinates of indexed photos
-- Clicking a marker shows photo info (filename, date)
+- Leaflet map renders Photos with GPS coordinates inside the active date range
 - Photos without GPS are excluded from the map
+- Shared date range filter and summary bar apply to the map page
+- Clicking a marker opens the Side Panel
 
 ---
 
-## Stage 8 — Unified View
-Timeline and map linked via HTMX.
+## Stage 8 — Sync Status and Setup Management
+Operational UI for sync progress, connection health, and post-setup reconfiguration.
 
-- Single page hosts both timeline list and Leaflet map
-- Selecting a date range in the timeline filters map pins (HTMX partial update)
-- Clicking a map cluster/pin highlights corresponding timeline entries
-- Photos without GPS appear only in the timeline
+- Sync Status page shows OneDrive connection state and indexing progress (`N / M`)
+- Sync Status updates via HTMX polling
+- Auth failures surface a re-authenticate prompt
+- Network failures surface a connection error without blocking local browsing
+- Setup page remains available after first run for re-authentication and folder changes
 
 ---
 
-## Stage 9 — Thumbnail Generation
-Local thumbnails stored in DB for fast UI rendering.
+## Stage 9 — Face Pipeline Thumbnails
+Additional thumbnail and crop preparation dedicated to the face pipeline.
 
-- During indexing: download photo, resize to thumbnail dimensions, store in DB as binary or file ref
-- Delete original after thumbnail is generated
-- Timeline and map views render thumbnails
-- On-demand full photo display fetches original from OneDrive at view time
+- Generate any extra thumbnail/crop artifacts needed by downstream face processing
+- Keep original Photos ephemeral during processing
+- Do not change the MVP thumbnail behavior already delivered in Stage 5
 
 ---
 
