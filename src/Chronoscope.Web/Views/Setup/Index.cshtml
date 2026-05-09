@@ -1,0 +1,16 @@
+@model Chronoscope.Web.ViewModels.Setup.SetupIndexViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<header>
+    <h1>@Model.Title</h1>
+    <p>@Model.Message</p>
+</header>
+
+<partial name="_AuthStep" model="Model.AuthStep" />
+
+<article>
+    <h2>Folder selection</h2>
+    <p>Coming next phase after OneDrive sign-in is connected.</p>
+</article>

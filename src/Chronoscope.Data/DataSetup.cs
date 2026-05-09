@@ -1,6 +1,8 @@
+using Chronoscope.Application.Abstractions.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Chronoscope.Application.Abstractions.SourceAuth;
 
 namespace Chronoscope.Data;
 
@@ -17,6 +19,8 @@ public static class DataSetup
         services.AddDbContextFactory<ChronoscopeDbContext>(options =>
             options.UseNpgsql(connectionString, npgsqlOptions => npgsqlOptions.UseNetTopologySuite())
                 .UseSnakeCaseNamingConvention());
+
+        services.AddScoped<ISourceAuthStateRepository, SourceAuth.SourceAuthStateRepository>();
 
         return services;
     }

@@ -8,7 +8,7 @@
 
 Chronoscope MVP delivers a single deployable that:
 
-1. Connects to a user's OneDrive and incrementally syncs photo metadata
+1. Connects to a shared app-level OneDrive Source and incrementally syncs photo metadata
 2. Extracts EXIF timestamps and GPS coordinates from each photo
 3. Generates and stores a thumbnail for each photo
 4. Presents photos in a switchable Timeline / Map explorer, filterable by date range
@@ -19,23 +19,31 @@ Chronoscope MVP delivers a single deployable that:
 
 A new user opens the browser and is presented with a **Setup page**. The setup flow is sequential:
 
-Access to the app itself is assumed to be protected by a reverse proxy. Inside the app, setup handles delegated OneDrive authorization separately.
+Access to the app itself is assumed to be protected by a reverse proxy. Inside the app, setup links a shared OneDrive Source used by authorized app users.
 
-1. **Authenticate OneDrive** — Redirect user through Microsoft login (Authorization Code Flow via `Microsoft.Identity.Web`) for an Azure AD or personal Microsoft account. Tokens are acquired and refreshed silently after initial sign-in.
+1. **Link OneDrive Source** — Redirect an authorized user through Microsoft login (Authorization Code Flow via `Microsoft.Identity.Web`) for an Azure AD or personal Microsoft account. Resulting Graph credentials are stored for the app-level Source.
 2. **Select folder** — User types an OneDrive folder path (e.g. `/Photos/Vacations`). A "Verify" button confirms the folder exists via Graph API before saving.
 3. **Sync starts** — Background worker begins immediately. User is redirected to the **Sync Status page**.
 4. **Explore** — Once photos are indexed, user navigates to Timeline or Map.
 
-After initial setup, the Setup page remains accessible from the nav for re-authentication or folder path changes.
+After initial setup, the Setup page remains accessible from the nav for Source relink or folder path changes.
 
 ### Auth and Token Persistence Requirements
 
 - App access control is handled outside Chronoscope by a reverse proxy or equivalent edge auth layer
 - Azure app registration is a **Web** app scoped to **Azure AD and personal Microsoft accounts**
 - Delegated permissions: `Files.Read`, `offline_access`, `User.Read`
-- Token cache is persisted in PostgreSQL using a distributed cache (survives app/container restarts)
-- Token cache encryption is enabled
-- ASP.NET Core Data Protection keys are persisted to a Docker-mounted filesystem volume
+- Graph access and refresh tokens are persisted in PostgreSQL as Source credentials (survives app/container restarts)
+- Graph token material is encrypted at rest
+- Graph token retrieval/refresh is server-managed and must not require `HttpContext` or auth cookies
+- Any authorized app user can run Source-backed operations using the linked Source
+
+### Acceptance Criteria (Source Auth)
+
+- Given two authorized app users, both can run Source-backed actions against the same linked Source.
+- Source-backed actions work without requiring the acting user to complete Microsoft sign-in again.
+- Graph tokens are persisted encrypted in DB and are not stored in browser cookies.
+- Token refresh can run in a non-HTTP path (background worker).
 
 ---
 
@@ -92,7 +100,7 @@ Single folder, typed as a path. Tree picker and multiple folder selection are po
 | `type` | Source type (e.g. `"onedrive"`). |
 | `folderPath` | Configured OneDrive folder path. |
 | `deltaToken` | Last delta query token for incremental sync. |
-| `authState` | MSAL token cache reference. |
+| `authState` | Encrypted app-level Graph token state (`accessToken`, `refreshToken`, expiry metadata). |
 
 ### Processing Status
 
@@ -150,15 +158,15 @@ Appears on photo selection (row click or pin click). Contains:
 
 ### Sync Status Page (`/sync/status`)
 
-- OneDrive connection status (connected / auth error / unreachable)
+- OneDrive Source status (connected / auth error / unreachable)
 - Indexing progress: `N / M photos indexed`
 - Updates via HTMX polling (every ~3 seconds)
-- When auth has expired: surfaces a "Re-authenticate" prompt
+- When Source auth has expired: surfaces a "Relink Source" prompt
 - The rest of the UI (Timeline, Map) remains fully functional when sync is stopped — the Index is local and read-only access is unaffected
 
 ### Setup Page (`/setup`)
 
-- Step 1: Microsoft sign-in via browser redirect (Authorization Code Flow)
+- Step 1: Link or relink shared OneDrive Source via browser redirect (Authorization Code Flow)
 - Step 2: Folder path input + "Verify" button
 - Accessible post-setup for re-authentication or folder reconfiguration
 
@@ -168,7 +176,7 @@ Appears on photo selection (row click or pin click). Contains:
 
 | Scenario | Behaviour |
 |---|---|
-| Auth token expires / refresh fails | Sync stops. UI remains browsable. Sync Status page shows auth error + re-authenticate prompt. |
+| Auth token expires / refresh fails | Sync stops. UI remains browsable. Sync Status page shows Source auth error + relink prompt. |
 | OneDrive unreachable (network) | Sync stops. UI remains browsable. Sync Status page shows connection error. |
 | Photo EXIF extraction fails | Photo marked `Failed`. Logged. No retry in MVP. |
 | Folder path not found on verify | Inline validation error on Setup page. Folder not saved. |
@@ -186,3 +194,4 @@ Appears on photo selection (row click or pin click). Contains:
 - Notification bell content (sync session results)
 - Full photo display (original fetched from OneDrive on demand)
 - Retry of `Failed` photos
+- Per-user OneDrive Source links

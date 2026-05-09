@@ -5,7 +5,7 @@
 - **Local-first metadata**: Photos live on OneDrive. Only metadata, embeddings, and thumbnails are stored locally.
 - **Ephemeral downloads**: Photos are downloaded temporarily for processing (EXIF, thumbnails, face detection) and deleted immediately after.
 - **Proxy-enforced app access**: Chronoscope assumes deployment behind a reverse proxy (e.g., Nginx, Traefik, Authentik) that authenticates the human user before they can access the app.
-- **Separate OneDrive source auth**: OneDrive access uses delegated Microsoft Graph auth inside the app and is independent from the reverse-proxy session.
+- **App-level OneDrive Source auth**: OneDrive access is linked once per app instance and shared across authorized app users.
 - **Single deployable**: One executable hosts both the background worker (sync/indexing) and the web UI (ASP.NET MVC).
 - **No rich domain model**: The app is data-centric with no business logic or state machines. Domain entities are used directly as EF entities — no separate persistence model, no mapping layer between them.
 - **EF configured via Fluent API only**: No EF attributes on domain classes. All EF configuration lives in the Data layer (`IEntityTypeConfiguration<T>`), keeping `Domain` free of any EF dependency.
@@ -60,11 +60,18 @@
 - Uses **Microsoft Graph API** with **Authorization Code Flow** via `Microsoft.Identity.Web`
 - Azure app registration is a **Web** app scoped to **Azure AD and personal Microsoft accounts**
 - Delegated scopes: `Files.Read`, `offline_access`, `User.Read`
-- Token cache is persisted in PostgreSQL via a distributed cache and silently refreshes access tokens on restart
-- Token cache encryption uses ASP.NET Core Data Protection with keys persisted to a filesystem volume
+- Graph access and refresh tokens are persisted in PostgreSQL as app-owned Source credentials
+- Token material is encrypted at rest and never logged in plaintext
+- Token refresh is executed server-side and is available to both MVC requests and background jobs
+- Graph token usage does not depend on `HttpContext`, auth cookies, or per-request browser session state
 - **Delta queries** track new/changed/deleted photos efficiently without full re-scans
 - User configures one folder at setup time
-- This flow authorizes OneDrive access for sync; it is not the app's primary access-control boundary
+- This flow authorizes OneDrive access for sync; app access control remains enforced by reverse proxy auth and app authorization
+
+### Source Identity Boundary
+- **App user identity** controls who can access Chronoscope features.
+- **Source identity** controls which OneDrive account is linked for sync.
+- Source identity is app-scoped and shared: any authorized app user can trigger Source-backed operations.
 
 ### Indexing Pipeline (Background Worker)
 Runs as `IHostedService` using an in-process **TPL Dataflow ETL workflow** (bounded stages with controlled parallelism). Processing steps per photo:
@@ -206,7 +213,7 @@ builder.Services.AddWeb();
 | `Chronoscope.Domain` | `Photo`, `GpsPoint`, `Face`, `Person` entities and value objects; no EF attributes, no dependencies |
 | `Chronoscope.Application` | Use cases, DTOs, and **all interface definitions** (`Abstractions/` — repository contracts, service contracts) |
 | `Chronoscope.Data` | EF Core `DbContext`, PostGIS configuration, EF migrations, repository implementations |
-| `Chronoscope.Infrastructure` | Graph API client, `Microsoft.Identity.Web` integration, distributed token cache, EXIF reader, FaceONNX runner, temp file manager |
+| `Chronoscope.Infrastructure` | Graph API client, OneDrive OAuth integration, DB-backed token refresh service, EXIF reader, FaceONNX runner, temp file manager |
 | `Chronoscope.Web` | MVC controllers, Razor views, Pico CSS layout, HTMX partials, Leaflet map views |
 | `Chronoscope.Host` | Program.cs, DI registration, `IHostedService` sync/indexing workers, app startup |
 | `Chronoscope.Tests.Unit` | Unit tests for controllers (no HTTP), use cases, and domain logic using xUnit + Moq + AutoFixture |
@@ -245,7 +252,7 @@ builder.Services.AddWeb();
 |---|---|---|
 | Language | C# / .NET | Learnable, strongly typed, good ecosystem |
 | Cloud access | Microsoft Graph API | Official OneDrive API |
-| OneDrive auth | Authorization Code Flow via `Microsoft.Identity.Web` | Correct fit for a browser-hosted setup flow, supports silent refresh, and works cleanly with persistent encrypted token caching for Azure AD and personal accounts |
+| OneDrive auth | Authorization Code Flow (app-level shared Source) | Correct fit for browser-hosted setup while keeping Graph credentials app-owned, DB-persisted, and reusable outside HTTP user context |
 | Database | PostgreSQL + PostGIS | Relational + native geospatial support |
 | ORM | EF Core | Migrations + data access in one |
 | PostgreSQL naming | `UseSnakeCaseNamingConvention()` | Consistent DB naming and smoother SQL interoperability |
