@@ -16,7 +16,7 @@ Establish a web-appropriate OneDrive authorization flow with durable token prote
 
 - [x] Task 3.1 — Integrate web-based Microsoft sign-in
 - [x] Task 3.2 — Persist and protect the OneDrive token cache
-- [ ] Task 3.3 — Add the setup auth step
+- [x] Task 3.3 — Add the setup auth step
 
 ### Task 3.1 — Integrate web-based Microsoft sign-in
 **Depends on:** Phase 2 complete  
