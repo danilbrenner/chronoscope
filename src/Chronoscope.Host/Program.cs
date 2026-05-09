@@ -1,5 +1,6 @@
 using Chronoscope.Application;
 using Chronoscope.Data;
+using Chronoscope.Host.Services;
 using Chronoscope.Infrastructure;
 using Chronoscope.Web;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,7 @@ builder.Services.AddApplication();
 builder.Services.AddData(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddWeb();
+builder.Services.AddHostedService<RefreshTokenService>();
 
 var app = builder.Build();
 var runMigrateAndExit = args.Any(argument =>

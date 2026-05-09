@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Chronoscope.Infrastructure\Chronoscope.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Chronoscope.Web\Chronoscope.Web.csproj" />
   </ItemGroup>
 

@@ -24,7 +24,7 @@ public sealed class SourceEntityConfiguration : IEntityTypeConfiguration<Source>
             .HasMaxLength(2048);
 
         builder.Property(source => source.AuthState)
-            .HasMaxLength(2048);
+            .HasColumnType("text");
 
         builder.Property(source => source.CreatedAtUtc)
             .IsRequired();

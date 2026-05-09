@@ -410,3 +410,4 @@ FodyWeavers.xsd
 *.db-shm
 *.db-wal
 .DS_Store
+**/.chronoscope-data-protection-keys

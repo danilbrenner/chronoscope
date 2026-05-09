@@ -1,7 +1,7 @@
 using Chronoscope.Application.Abstractions.SourceAuth;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Identity.Web;
 
 namespace Chronoscope.Infrastructure;
 
@@ -10,40 +10,31 @@ public static class InfrastructureSetup
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var authConfiguration = configuration.GetSection(Auth.OneDriveAuthOptions.SectionName);
-        var authOptions = authConfiguration.Get<Auth.OneDriveAuthOptions>() 
-                          ?? throw new InvalidOperationException($"Failed to bind {Auth.OneDriveAuthOptions.SectionName} configuration section.");
+        _ = authConfiguration.Get<Auth.OneDriveAuthOptions>()
+            ?? throw new InvalidOperationException($"Failed to bind {Auth.OneDriveAuthOptions.SectionName} configuration section.");
+        var dataProtectionOptions = configuration.GetSection(Auth.DataProtectionOptions.SectionName).Get<Auth.DataProtectionOptions>()
+            ?? throw new InvalidOperationException($"Failed to bind {Auth.DataProtectionOptions.SectionName} configuration section.");
 
-        services
-            .AddAuthentication(Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectDefaults.AuthenticationScheme)
-            .AddMicrosoftIdentityWebApp(authConfiguration)
-            .EnableTokenAcquisitionToCallDownstreamApi(authOptions.Scopes)
-            .AddInMemoryTokenCaches();
+        var keysDirectory = Directory.CreateDirectory(dataProtectionOptions.KeysPath);
+
+        services.AddDataProtection()
+            .PersistKeysToFileSystem(keysDirectory);
+
+        services.AddAuthentication();
 
         services.AddAuthorization();
-        services.AddHttpContextAccessor();
-        services.AddHttpClient(Auth.MicrosoftGraphSourceAuthService.HttpClientName, httpClient =>
+        services.AddHttpClient(Auth.MicrosoftGraphSourceAuthProvider.HttpClientName, httpClient =>
         {
             httpClient.BaseAddress = new Uri("https://graph.microsoft.com/v1.0/");
         });
 
         services.AddOptions<Auth.OneDriveAuthOptions>()
-            .Bind(authConfiguration)
-            .Validate(options => HasRequiredScopes(options.Scopes),
-                $"OneDrive auth scopes must include: {string.Join(", ", Auth.OneDriveAuthOptions.RequiredScopes)}.");
+            .Bind(authConfiguration);
+        services.AddOptions<Auth.DataProtectionOptions>()
+            .Bind(configuration.GetSection(Auth.DataProtectionOptions.SectionName));
 
-        services.AddScoped<ISourceAuthService, Auth.MicrosoftGraphSourceAuthService>();
+        services.AddScoped<ISourceAuthProvider, Auth.MicrosoftGraphSourceAuthProvider>();
 
         return services;
-    }
-
-    private static bool HasRequiredScopes(IReadOnlyCollection<string>? scopes)
-    {
-        if (scopes is null)
-        {
-            return false;
-        }
-
-        var configuredScopes = new HashSet<string>(scopes, StringComparer.OrdinalIgnoreCase);
-        return Auth.OneDriveAuthOptions.RequiredScopes.All(configuredScopes.Contains);
     }
 }

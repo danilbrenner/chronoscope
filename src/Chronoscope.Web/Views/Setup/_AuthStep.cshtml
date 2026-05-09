@@ -1,0 +1,40 @@
+@model Chronoscope.Web.ViewModels.Setup.SetupAuthStepViewModel
+
+<article id="setup-auth-step" aria-live="polite">
+    <header>
+        <h2>@Model.Title</h2>
+    </header>
+
+    <p><strong>@Model.Status</strong> — @Model.Message</p>
+
+    @if (Model.IsConnected)
+    {
+        <dl>
+            <dt>Connected user</dt>
+            <dd>@Model.DisplayName</dd>
+
+            @if (!string.IsNullOrWhiteSpace(Model.EmailAddress))
+            {
+                <dt>Email</dt>
+                <dd>@Model.EmailAddress</dd>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.DriveId))
+            {
+                <dt>Drive ID</dt>
+                <dd><code>@Model.DriveId</code></dd>
+            }
+        </dl>
+
+        <form method="post"
+              action="/link/onedrive"
+              hx-delete="/link/onedrive"
+              hx-swap="none">
+            <button type="submit" class="secondary">Delete link</button>
+        </form>
+    }
+    else
+    {
+        <a href="/link/onedrive/start" role="button">Create new link</a>
+    }
+</article>

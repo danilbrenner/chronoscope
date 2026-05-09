@@ -17,4 +17,8 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\SourceAuth\Complete.cshtml" />
+  </ItemGroup>
+
 </Project>
